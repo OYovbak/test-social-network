@@ -13,10 +13,25 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+//Route::get('/', function () {
+//    return view('posts.postList');
+//});
+Route::get('/', 'PostController@postList')->name('postList');
 
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+
+Route::get('/profile/{name}', 'ProfileController@profileShow')->name('profile.show');
+Route::post('/profile/friend', 'FriendController@addOrDelete')->name('profile.friend');
+
+Route::get('/postList/myPosts', 'PostController@myPosts')->name('myPosts');
+Route::post('/postList/myPosts/show', 'PostController@showPosts')->name('posts.show');
+Route::post('/postList/myPosts/create', 'PostController@createPost')->name('post.createPost');
+Route::post('/postList/myPosts/delete', 'PostController@deletePost')->name('post.delete');
+
+Route::get('/postList/{title}', 'PostController@postPage')->name('postPage');
+Route::post('/postList/favorite', 'PostController@postFavorite')->name('post.favorite');
+
+Route::post('/comments/add', 'CommentController@addComment')->name('comment.add');
+Route::post('/comments/show', 'CommentController@showComments')->name('comment.show');
