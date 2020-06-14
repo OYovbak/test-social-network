@@ -24,6 +24,8 @@ Route::get('/home', 'HomeController@index')->name('home');
 
 Route::get('/profile/{name}', 'ProfileController@profileShow')->name('profile.show');
 Route::post('/profile/friend', 'FriendController@addOrDelete')->name('profile.friend');
+Route::post('/profile/showFriends', 'FriendController@showFriends')->name('profile.showFriends');
+Route::post('profile/awaitingAnswer', 'FriendController@awaitingAnswer')->name('profile.awaitingAnswer');
 
 Route::get('/postList/myPosts', 'PostController@myPosts')->name('myPosts');
 Route::post('/postList/myPosts/show', 'PostController@showPosts')->name('posts.show');

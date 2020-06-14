@@ -56,6 +56,7 @@
                             </a>
 
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                                <a class="dropdown-item" href="{{ route('profile.show', \Illuminate\Support\Facades\Auth::user()->name) }}">My Profile</a>
                                 <a class="dropdown-item" href="{{ route('myPosts') }}">My Posts</a>
                                 <a class="dropdown-item" href="{{ route('logout') }}"
                                    onclick="event.preventDefault();
@@ -102,6 +103,7 @@
                                 </div>
 
                             </form>
+                            <hr>
                             <div id="commentList">
 
                             </div>
@@ -165,10 +167,10 @@
                 success:function (data) {
                     var output = '';
                     if(data.canDelete == '1'){
-                        output += '<a class="btn-danger action" id="action_btn">Delete</a>';
+                        output += '<a class="btn-danger action" id="action_btn">Delete from favorite</a>';
                     }
                     else{
-                        output += '<a class="btn-info action" id="action_btn">Add</a>';
+                        output += '<a class="btn-info action" id="action_btn">Add to favorite</a>';
                     }
                     $('#add_delete').html(output);
                 }

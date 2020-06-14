@@ -56,6 +56,7 @@
                             </a>
 
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                                <a class="dropdown-item" href="{{ route('profile.show', \Illuminate\Support\Facades\Auth::user()->name) }}">My Profile</a>
                                 <a class="dropdown-item" href="{{ route('myPosts') }}">My Posts</a>
                                 <a class="dropdown-item" href="{{ route('logout') }}"
                                    onclick="event.preventDefault();
@@ -86,12 +87,19 @@
                             <div id="addOrDeleteFriend">
 
                             </div>
-                            <h3> Posts of this user: </h3>
+                            <div id="friends">
+
+                            </div>
+                            <div id="awaiting">
+
+                            </div>
+                          @if($user->id != \Illuminate\Support\Facades\Auth::user()->id)  <h3> Posts of this user: </h3>
                        @foreach($user->posts as $post)
                                 <div> Title: <a href="{{route('postPage', $post->title)}}">{{$post->title}}</a>| Create at: {{$post->created_at}}
                                 </div>
                                 <hr>
                            @endforeach
+                        @endif
                             <H3>Favorite posts:</H3>
                             @foreach($user->favoritePosts as $post)
                                 <div>
@@ -138,7 +146,9 @@
                        else {
                            output += '<a>Awaiting answer from user</a>';
                        }
+                        output += '<hr>';
                        $('#addOrDeleteFriend').html(output);
+                       showUserFriends();
                     }
                 });
             }
@@ -146,6 +156,67 @@
                 var val = this.id;
                 addDeleteFriend(val);
             });
+        }
+        else{
+            waitingAnswer();
+            function waitingAnswer(doAction = '', id = '') {
+                $.ajax({
+                    url:'{{route('profile.awaitingAnswer')}}',
+                    method: 'POST',
+                    data:{_token:_token, doAction:doAction, id:id},
+                    dataType: 'json',
+                    success:function (awaiting) {
+                        var output = '';
+                        if(awaiting.length !== 0){
+                            output += '<h3>Awaiting answer:</h3> ';
+                            for(var count=0; count<awaiting.length; count++) {
+                                output += '<a href="'+awaiting[count].link+'">'+awaiting[count].name+'</a>';
+                                output += '<a class="btn-info add" id="'+awaiting[count].id+'">Acceps</a>';
+                                output += '<a class="btn-danger delete" id="'+awaiting[count].id+'">Reject</a>';
+                            }
+                            output += '<hr>';
+                        }
+                        if(doAction === 'add'){
+                            showUserFriends();
+                        }
+                        $('#awaiting').html(output);
+                    }
+                })
+            }
+            $(document).on('click', '.del', function () {
+                var id = this.id;
+                var action = 'del';
+                waitingAnswer(action, id);
+            });
+            $(document).on('click', '.add', function () {
+                var id = this.id;
+                var action = 'add';
+                waitingAnswer(action, id);
+            });
+        }
+        showUserFriends();
+        function showUserFriends() {
+            $.ajax({
+                url:'{{route('profile.showFriends')}}',
+                method: 'POST',
+                data:{userId:userId, _token:_token},
+                dataType: 'json',
+                success:function (friendList) {
+                    var output = '';
+                    if(friendList.length !== 0){
+                        output += '<h3>Friends:</h3> ';
+                        for(var count=0; count<friendList.length; count++) {
+                            output += '<a href="'+friendList[count].link+'">'+friendList[count].name+'</a>';
+                        }
+                        output += '<hr>';
+                    }
+                    else{
+                        output += '<h3>Friend list is empty</h3> ';
+                        output += '<hr>';
+                    }
+                    $('#friends').html(output);
+                }
+            })
         }
     });
 </script>

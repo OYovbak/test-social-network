@@ -36,7 +36,11 @@ class PostController extends Controller
     }
 
     public function myPosts(){
+        if(Auth::check()){
         return view('users.myPosts');
+        }
+        else return redirect(route('postList'));
+
     }
 
     public function createPost(Request $request){
