@@ -93,25 +93,25 @@
                             <div id="awaiting">
 
                             </div>
-                          @if(\Illuminate\Support\Facades\Auth::check())
-                            @if($user->id != \Illuminate\Support\Facades\Auth::user()->id)  <h3> Posts of this user: </h3>
-                       @foreach($user->posts as $post)
-                                <div> Title: <a href="{{route('postPage', $post->title)}}">{{$post->title}}</a>| Create at: {{$post->created_at}}
-                                </div>
-                                <hr>
-                           @endforeach
-                        @endif
+                            @if(\Illuminate\Support\Facades\Auth::check())
+                                @if($user->id != \Illuminate\Support\Facades\Auth::user()->id)  <h3> Posts of this user: </h3>
+                                    @foreach($user->posts as $post)
+                                        <div> Title: <a href="{{route('postPage', $post->title)}}">{{$post->title}}</a>| Create at: {{$post->created_at}}
+                                        </div>
+                                        <hr>
+                                        @endforeach
+                                @endif
                             @else
                                 <h3> Posts of this user: </h3>
-                                @foreach($user->posts as $post)
+                                    @foreach($user->posts as $post)
                                     <div> Title: <a href="{{route('postPage', $post->title)}}">{{$post->title}}</a>| Create at: {{$post->created_at}}
                                     </div>
                                     <hr>
-                                @endforeach
-                            @endif
+                                    @endforeach
+                                 @endif
 
-                            <H3>Favorite posts:</H3>
-                        @foreach($user->favoritePosts as $post)
+                                <H3>Favorite posts:</H3>
+                            @foreach($user->favoritePosts as $post)
                                 <div>
                                     Author: <a href="{{route('profile.show', $post->user->name)}}">{{$post->user->name}}</a>
                                     <p>Title: <a href="{{route('postPage', $post->title)}}">{{$post->title}}</a>| Create at: {{$post->created_at}}</p>
@@ -131,11 +131,6 @@
     $(document).ready(function () {
         var userId = '{{$user->id}}';
         var _token = $('input[name="_token"]').val();
-        // var isMyProfile = 1;
-        {{--var authUser = '{{\Illuminate\Support\Facades\Auth::check()}}';--}}
-        {{--if(authUser.length !== 1) {--}}
-        {{--    console.log(authUser.length);--}}
-        {{--    isMyProfile = '{{($user->id == \Illuminate\Support\Facades\Auth::user()->id ? 1 : 0)}}';--}}
         checkUser();
         function checkUser() {
             $.ajax({

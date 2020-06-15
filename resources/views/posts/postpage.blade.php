@@ -86,6 +86,9 @@
                         {{ csrf_field() }}
                         <div class="card-body">
                             <div> Author: <a href="{{route('profile.show', $post->user->name)}}">{{$post->user->name}}</a></div>
+                            @if($post->url_img)
+                                <img src="{{$post->url_img}}" height="200">
+                                @endif
                             <p>{{$post->content}}</p>
                             <div id="add_delete">
 
