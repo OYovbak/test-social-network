@@ -25,12 +25,15 @@ Route::get('/home', 'HomeController@index')->name('home');
 Route::get('/profile/{name}', 'ProfileController@profileShow')->name('profile.show');
 Route::post('/profile/friend', 'FriendController@addOrDelete')->name('profile.friend');
 Route::post('/profile/showFriends', 'FriendController@showFriends')->name('profile.showFriends');
-Route::post('profile/awaitingAnswer', 'FriendController@awaitingAnswer')->name('profile.awaitingAnswer');
+Route::post('/profile/awaitingAnswer', 'FriendController@awaitingAnswer')->name('profile.awaitingAnswer');
+Route::post('/profile/check', 'ProfileController@userCheck')->name('user.check');
 
 Route::get('/postList/myPosts', 'PostController@myPosts')->name('myPosts');
 Route::post('/postList/myPosts/show', 'PostController@showPosts')->name('posts.show');
 Route::post('/postList/myPosts/create', 'PostController@createPost')->name('post.createPost');
 Route::post('/postList/myPosts/delete', 'PostController@deletePost')->name('post.delete');
+Route::post('/postList/myPosts/postInfo', 'PostController@postInfo')->name('post.info');
+Route::post('/postList/myPosts/update', 'PostController@updatePost')->name('post.update');
 
 Route::get('/postList/{title}', 'PostController@postPage')->name('postPage');
 Route::post('/postList/favorite', 'PostController@postFavorite')->name('post.favorite');

@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Post;
 use App\User;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\DB;
 
 class PostController extends Controller
 {
@@ -23,6 +25,10 @@ class PostController extends Controller
         if($request->id){
             $user = User::find($request->id);
             $posts = $user->posts;
+        }
+        elseif($request->search){
+            $posts = Post::where('title', 'like', '%'.$request->search.'%')
+                ->get();
         }
         else{
             $posts = Post::all();
@@ -43,19 +49,44 @@ class PostController extends Controller
 
     }
 
-    public function createPost(Request $request){
-        $title = $request->title;
-        $content = $request->text;
-        $user = User::find(Auth::user()->id);
-        $post = new Post(array(
-            'title' => $title,
-            'content' => $content,
-        ));
-        $user->posts()->save($post);
-        $data = [
-            'success' => 'post saved',
-        ];
-        echo json_encode($data);
+    public function createPost(Request $request)
+    {
+        if ($request->ajax()) {
+            $rules = [
+                'title' => 'required|unique:posts',
+                'text' => 'required',
+                'url_img' => 'nullable|sometimes|image',
+            ];
+            $error = Validator::make($request->all(), $rules);
+            if($error->fails()){
+                $data = [
+                    'errors' => $error->errors()->all()
+                ];
+                echo json_encode($data);
+            }
+            else{
+                if($request->url_img){
+                $image = $request->file('url_img')->store('images', 'public');
+                $url_img = Storage::url($image);
+                }
+                else {
+                    $url_img = null;
+                }
+                $title = $request->title;
+                $content = $request->text;
+                $user = User::find(Auth::user()->id);
+                $post = new Post([
+                    'title' => $title,
+                    'content' => $content,
+                    'url_img' => $url_img
+                ]);
+                $user->posts()->save($post);
+                $data = [
+                    'success' => 'post saved',
+                ];
+                echo json_encode($data);
+            }
+        }
     }
 
     public function deletePost(Request $request){
@@ -98,6 +129,54 @@ class PostController extends Controller
                     $data = [
                         'canDelete' => '1'
                     ]; }
+                echo json_encode($data);
+            }
+        }
+    }
+
+    public function postInfo(Request $request){
+        $postInfo = Post::where('id', $request->idToUpdate)->first();
+        echo json_encode($postInfo);
+    }
+
+    public function updatePost(Request $request){
+        if($request->ajax()){
+            $rules = [
+                'title' => 'nullable|unique:posts',
+                'text' => 'nullable',
+                'url_img' => 'nullable|sometimes|image',
+            ];
+            $error = Validator::make($request->all(), $rules);
+            if($error->fails()){
+                $data = [
+                    'errors' => $error->errors()->all()
+                ];
+                echo json_encode($data);
+            }
+            else {
+                $post = Post::find($request->id);
+                if($request->title){
+                    $post->title = $request->title;
+                }
+                if($request->text != $post->content){
+                    $post->text = $request->content;
+                }
+                $old_img = '';
+                if($request->url_img){
+                    $image = $request->file('url_img')->store('images', 'public');
+                    $url_img = Storage::url($image);
+                    if($post->url_img != null){
+                        $old_img = $post->url_img;
+                    }
+                    $post->url_img = $url_img;
+                }
+                $post->save();
+                $data = [
+                    'success' => 'Info changed',
+                ];
+                if($old_img != ''){
+                    unlink(public_path($old_img));
+                }
                 echo json_encode($data);
             }
         }

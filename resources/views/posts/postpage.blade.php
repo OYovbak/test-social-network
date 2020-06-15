@@ -132,8 +132,11 @@
                 data:{postId:postId, comment:comment, _token:_token},
                 dataType: 'json',
                 success:function(result){
+                    if(result === 'success'){
                     showComments();
-                    alert(result.success);
+                    alert('Commend added successful');
+                    }
+                    else alert('Please register or login');
                 }
             })
 

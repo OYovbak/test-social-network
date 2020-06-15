@@ -86,6 +86,7 @@
                         <div class="card-body">
 
                             <table class="table table-striped table-bordered">
+                                <input type="text" class="input-group-text search" placeholder="Search by title ...">
                                 <thead>
                                 <tr>
                                     <th width="35%">Author</th>
@@ -108,13 +109,14 @@
 <script>
     $(document).ready(function () {
         var _token = $('input[name="_token"]').val();
+        var search_line = '';
         allPosts();
 
-        function allPosts(){
+        function allPosts(search = ''){
             $.ajax({
                 url:"{{ route('posts.show') }}",
                 method: "POST",
-                data:{_token:_token},
+                data:{search:search ,_token:_token},
                 dataType:"json",
                 success:function (posts) {
                     var output = '';
@@ -127,6 +129,9 @@
                 }
             });
         }
-
+        $(document).on('keyup', '.search', function () {
+            search_line = $('.search').val();
+            allPosts(search_line);
+        });
     });
 </script>

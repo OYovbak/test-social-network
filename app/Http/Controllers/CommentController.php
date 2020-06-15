@@ -10,15 +10,21 @@ use Illuminate\Support\Facades\Auth;
 class CommentController extends Controller
 {
     public function addComment(Request $request){
-        $user = Auth::user();
-        $comment = new Comment(array(
-            'content' => $request->comment,
-            'post_id' => $request->postId));
-        $user->comments()->save($comment);
-        $result = [
-          'success' => 'success'
-        ];
-        echo json_encode($result);
+        If($request->ajax()){
+            if(Auth::check()){
+                $user = Auth::user();
+                $comment = new Comment(array(
+                    'content' => $request->comment,
+                    'post_id' => $request->postId));
+                $user->comments()->save($comment);
+                $result = 'success';
+                echo json_encode($result);
+            }
+            else {
+                $result = 'error';
+                echo json_encode($result);
+            }
+        }
     }
 
     public function showComments(Request $request){

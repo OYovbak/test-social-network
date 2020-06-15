@@ -93,15 +93,25 @@
                             <div id="awaiting">
 
                             </div>
-                          @if($user->id != \Illuminate\Support\Facades\Auth::user()->id)  <h3> Posts of this user: </h3>
+                          @if(\Illuminate\Support\Facades\Auth::check())
+                            @if($user->id != \Illuminate\Support\Facades\Auth::user()->id)  <h3> Posts of this user: </h3>
                        @foreach($user->posts as $post)
                                 <div> Title: <a href="{{route('postPage', $post->title)}}">{{$post->title}}</a>| Create at: {{$post->created_at}}
                                 </div>
                                 <hr>
                            @endforeach
                         @endif
+                            @else
+                                <h3> Posts of this user: </h3>
+                                @foreach($user->posts as $post)
+                                    <div> Title: <a href="{{route('postPage', $post->title)}}">{{$post->title}}</a>| Create at: {{$post->created_at}}
+                                    </div>
+                                    <hr>
+                                @endforeach
+                            @endif
+
                             <H3>Favorite posts:</H3>
-                            @foreach($user->favoritePosts as $post)
+                        @foreach($user->favoritePosts as $post)
                                 <div>
                                     Author: <a href="{{route('profile.show', $post->user->name)}}">{{$post->user->name}}</a>
                                     <p>Title: <a href="{{route('postPage', $post->title)}}">{{$post->title}}</a>| Create at: {{$post->created_at}}</p>
@@ -121,79 +131,97 @@
     $(document).ready(function () {
         var userId = '{{$user->id}}';
         var _token = $('input[name="_token"]').val();
-        var isMyProfile = '{{($user->id == \Illuminate\Support\Facades\Auth::user()->id ? 1 : 0)}}';
-        if(isMyProfile == 0){
-            addDeleteFriend();
-            function addDeleteFriend(doAction = '') {
-                $.ajax({
-                   url: '{{route('profile.friend')}}',
-                   method: 'POST',
-                   data:{userId:userId, doAction:doAction, _token:_token},
-                   dataType: 'json',
-                    success:function (result) {
-                       var output = '';
-                       if(result.canAdd){
-                           output += '<a class="btn-info action" id="add">Add to friends</a>';
-                       }
-                       else if(result.canDelete){
-                           output += '<a class="btn-danger action" id="delete">Delete from friends</a>';
-                       }
-                       else if(result.answer){
-                           output += '<a>User want to add you in friends</a>';
-                           output += '<a class="btn-info action" id="add">Acceps</a>';
-                           output += '<a class="btn-danger action" id="delete">Reject</a>';
-                       }
-                       else {
-                           output += '<a>Awaiting answer from user</a>';
-                       }
-                        output += '<hr>';
-                       $('#addOrDeleteFriend').html(output);
-                       showUserFriends();
+        // var isMyProfile = 1;
+        {{--var authUser = '{{\Illuminate\Support\Facades\Auth::check()}}';--}}
+        {{--if(authUser.length !== 1) {--}}
+        {{--    console.log(authUser.length);--}}
+        {{--    isMyProfile = '{{($user->id == \Illuminate\Support\Facades\Auth::user()->id ? 1 : 0)}}';--}}
+        checkUser();
+        function checkUser() {
+            $.ajax({
+                url: '{{route('user.check')}}',
+                method: 'POST',
+                data: {userId: userId, _token: _token},
+                dataType: 'json',
+                success: function (result) {
+                   var isMyProfile = result;
+                    if(isMyProfile == 0){
+                        addDeleteFriend();
+                        function addDeleteFriend(doAction = '') {
+                            $.ajax({
+                                url: '{{route('profile.friend')}}',
+                                method: 'POST',
+                                data:{userId:userId, doAction:doAction, _token:_token},
+                                dataType: 'json',
+                                success:function (result) {
+                                    var output = '';
+                                    if(result.canAdd){
+                                        output += '<a class="btn-info action" id="add">Add to friends</a>';
+                                    }
+                                    else if(result.canDelete){
+                                        output += '<a class="btn-danger action" id="delete">Delete from friends</a>';
+                                    }
+                                    else if(result.answer){
+                                        output += '<a>User want to add you in friends</a>';
+                                        output += '<a class="btn-info action" id="add">Acceps</a>';
+                                        output += '<a class="btn-danger action" id="delete">Reject</a>';
+                                    }
+                                    else {
+                                        output += '<a>Awaiting answer from user</a>';
+                                    }
+                                    output += '<hr>';
+                                    $('#addOrDeleteFriend').html(output);
+                                    showUserFriends();
+                                }
+                            });
+                        }
+                        $(document).on('click', '.action', function () {
+                            var val = this.id;
+                            addDeleteFriend(val);
+                        });
                     }
-                });
-            }
-            $(document).on('click', '.action', function () {
-                var val = this.id;
-                addDeleteFriend(val);
+                    else{
+                        waitingAnswer();
+                        function waitingAnswer(doAction = '', id = '') {
+                            $.ajax({
+                                url:'{{route('profile.awaitingAnswer')}}',
+                                method: 'POST',
+                                data:{_token:_token, doAction:doAction, id:id},
+                                dataType: 'json',
+                                success:function (awaiting) {
+                                    var output = '';
+                                    if(awaiting.length !== 0){
+                                        output += '<h3>Awaiting answer:</h3> ';
+                                        for(var count=0; count<awaiting.length; count++) {
+                                            output += '<a href="'+awaiting[count].link+'">'+awaiting[count].name+'</a>';
+                                            output += '<a class="btn-info add" id="'+awaiting[count].id+'">Acceps</a>';
+                                            output += '<a class="btn-danger delete" id="'+awaiting[count].id+'">Reject</a>';
+                                        }
+                                        output += '<hr>';
+                                    }
+                                    if(doAction === 'add'){
+                                        showUserFriends();
+                                    }
+                                    $('#awaiting').html(output);
+                                }
+                            })
+                        }
+                        $(document).on('click', '.del', function () {
+                            var id = this.id;
+                            var action = 'del';
+                            waitingAnswer(action, id);
+                        });
+                        $(document).on('click', '.add', function () {
+                            var id = this.id;
+                            var action = 'add';
+                            waitingAnswer(action, id);
+                        });
+
+                    }
+                }
             });
         }
-        else{
-            waitingAnswer();
-            function waitingAnswer(doAction = '', id = '') {
-                $.ajax({
-                    url:'{{route('profile.awaitingAnswer')}}',
-                    method: 'POST',
-                    data:{_token:_token, doAction:doAction, id:id},
-                    dataType: 'json',
-                    success:function (awaiting) {
-                        var output = '';
-                        if(awaiting.length !== 0){
-                            output += '<h3>Awaiting answer:</h3> ';
-                            for(var count=0; count<awaiting.length; count++) {
-                                output += '<a href="'+awaiting[count].link+'">'+awaiting[count].name+'</a>';
-                                output += '<a class="btn-info add" id="'+awaiting[count].id+'">Acceps</a>';
-                                output += '<a class="btn-danger delete" id="'+awaiting[count].id+'">Reject</a>';
-                            }
-                            output += '<hr>';
-                        }
-                        if(doAction === 'add'){
-                            showUserFriends();
-                        }
-                        $('#awaiting').html(output);
-                    }
-                })
-            }
-            $(document).on('click', '.del', function () {
-                var id = this.id;
-                var action = 'del';
-                waitingAnswer(action, id);
-            });
-            $(document).on('click', '.add', function () {
-                var id = this.id;
-                var action = 'add';
-                waitingAnswer(action, id);
-            });
-        }
+
         showUserFriends();
         function showUserFriends() {
             $.ajax({

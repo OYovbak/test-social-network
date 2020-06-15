@@ -96,7 +96,7 @@
 
                                             <div class="form-group">
                                                 <div class="col-md-12">
-                                                    <input placeholder="Category..." type="text" name="title" id="title" class="form-control" />
+                                                    <input placeholder="Title..." type="text" name="title" id="title" class="form-control" />
                                                 </div>
                                             </div>
 
@@ -106,6 +106,58 @@
                                                 </div>
                                             </div>
 
+                                            <hr>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-4 form_name"><b>IMG:</b></label>
+                                                <div class="col-md-11">
+                                                    <input type="file" name="img" id="img"/>
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <br />
+                                            <div class="form-group" align="center">
+                                                <input type="hidden" name="hidden_id" id="hidden_id">
+                                                <input type="submit" name="action_button" id="action_button" class="btn btn-warning" value="Add" />
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div id="updateModal" class="modal" role="dialog">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h4 class="modal-title">Add new post</h4>
+                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <span id="form_updatePost_result"></span>
+                                        <form method="post" id="updatePostForm" class="form-horizontal" enctype="multipart/form-data">
+
+                                            <div class="form-group">
+                                                <div class="col-md-12">
+                                                    <input type="text" name="newTitle" id="newTitle" class="form-control" />
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <div class="col-md-12">
+                                                    <input type="text" name="newContent" id="newContent" class="form-control" />
+                                                </div>
+                                            </div>
+
+                                            <hr>
+                                            <div class="form-group">
+                                                <label class="control-label col-md-4 form_name">New IMG</label>
+                                                <div id="oldImg"></div> <br>
+                                                <div class="col-md-12">
+                                                    <input type="file" name="newImg" id="newImg"/>
+                                                </div>
+                                            </div>
+                                            <hr>
                                             <br />
                                             <div class="form-group" align="center">
                                                 <input type="hidden" name="hidden_id" id="hidden_id">
@@ -149,6 +201,7 @@
         var _token = $('input[name="_token"]').val();
         var id = '{{Auth::user()->id}}';
         myPosts(id);
+
         $('#addBook').click(function () {
             $('#addModal').modal('show');
         });
@@ -165,7 +218,8 @@
                         output += '<tr>';
                         output += '<td ><a href="'+posts[count].authorProfile+'">' + posts[count].author + '</a></td>';
                         output += '<td ><a href="'+posts[count].link+'">' + posts[count].title + '</a></td>';
-                        output += '<td ><a type="button" id="'+posts[count].id+'" class="btn btn-danger delete">delete</a></td></tr>';
+                        output += '<td ><a type="button" id="'+posts[count].id+'" class="btn btn-danger delete">delete</a></td>';
+                        output += '<td ><a type="button" id="'+posts[count].id+'" class="btn btn-info update">update</a></td></tr>';
                     }
                     $('tbody').html(output);
                 }
@@ -177,6 +231,9 @@
             var form_data = new FormData();
             form_data.append('title', $('#title').val());
             form_data.append('text', $('#content').val());
+            if($('#img')[0].files[0]) {
+                form_data.append('url_img', $('#img')[0].files[0]);
+            }
             form_data.append('_token', _token);
             $.ajax({
                 url:"{{ route('post.createPost') }}",
@@ -187,11 +244,18 @@
                 processData: false,
                 dataType:"json",
                 success:function (data) {
-
                     var result;
+                    if(data.errors){
+                        result = '<div class="alert alert-danger"';
+                        for(var count=0; count < data.errors.length; count++){
+                            result += '<p>' + data.errors[count] + '</p>';
+                        }
+                        result += '</div>';
+                    }
                     if(data.success){
                         result = '<div class="alert alert-success">' + data.success + '</div>';
                         $('#addPostForm')[0].reset();
+                        myPosts(id);
                     }
                     $('#form_addPost_result').html(result);
                 }
@@ -213,5 +277,69 @@
                 }
             });
         });
+        var idToUpdate;
+        var oldTitle;
+        $(document).on('click', '.update', function () {
+            idToUpdate = this.id;
+            addInfoToUpdate();
+            oldTitle = $('#newTitle').val();
+            $('#form_updatePost_result').html('');
+            $('#updateModal').modal('show');
+        });
+        function addInfoToUpdate() {
+            $.ajax({
+                url: '{{route('post.info')}}',
+                method: 'POST',
+                data: {idToUpdate:idToUpdate, _token:_token},
+                dataType: 'json',
+                success:function (postInfo) {
+                    $('#newTitle').val(postInfo.title);
+                    $('#newContent').val(postInfo.content)
+                    if(postInfo.url_img){
+                        $('#oldImg').html('<img src="'+postInfo.url_img+'" height="200">');
+                    }
+                    else $('#oldImg').html('');
+                }
+            })
+        }
+        $('#updatePostForm').on('submit', function (event) {
+            event.preventDefault()
+            var form_data =new FormData();
+            form_data.append('id', idToUpdate);
+            if(oldTitle !== $('#newTitle').val()){
+            form_data.append('title', $('#newTitle').val());
+            }
+            else form_data.append('title', '');
+            form_data.append('text', $('#newContent').val());
+            if($('#newImg')[0].files[0]) {
+                form_data.append('url_img', $('#newImg')[0].files[0]);
+            }
+            form_data.append('_token', _token);
+            $.ajax({
+                url: '{{route('post.update')}}',
+                method: 'POST',
+                data: form_data,
+                contentType: false,
+                cache: false,
+                processData: false,
+                dataType:"json",
+                success:function (data) {
+                    var result;
+                    if(data.errors){
+                        result = '<div class="alert alert-danger"';
+                        for(var count=0; count < data.errors.length; count++){
+                            result += '<p>' + data.errors[count] + '</p>';
+                        }
+                        result += '</div>';
+                    }
+                    if(data.success){
+                        myPosts(id);
+                        alert( data.success);
+                        $('#updateModal').modal('hide');
+                    }
+                    $('#form_updatePost_result').html(result);
+                }
+            })
+        })
     });
 </script>
