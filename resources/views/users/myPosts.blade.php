@@ -173,7 +173,7 @@
 {{--                        end modal forms--}}
                         {{ csrf_field() }}
                         <div class="card-body">
-                            <button type="button" name="addBook" id="addBook" class="btn-info">Add new book</button>
+                            <button type="button" name="addBook" id="addBook" class="btn-info">Add new post</button>
 
                             <table class="table table-striped table-bordered">
                                 <thead>
