@@ -40,3 +40,9 @@ Route::post('/postList/favorite', 'PostController@postFavorite')->name('post.fav
 
 Route::post('/comments/add', 'CommentController@addComment')->name('comment.add');
 Route::post('/comments/show', 'CommentController@showComments')->name('comment.show');
+
+Route::get('/artisan/storage', function() {
+    $command = 'storage:link';
+    $result = Artisan::call($command);
+    return Artisan::output();
+});
